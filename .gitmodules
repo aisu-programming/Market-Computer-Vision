@@ -1,3 +1,6 @@
 [submodule "Customer-Flow-Detection"]
 	path = Customer-Flow-Detection
 	url = https://github.com/aisu-programming/Customer-Flow-Detection.git
+[submodule "Vegetable-Instance-Segmentation"]
+	path = Vegetable-Instance-Segmentation
+	url = https://github.com/aisu-programming/Vegetable-Instance-Segmentation.git
