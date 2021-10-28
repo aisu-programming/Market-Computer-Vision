@@ -1,4 +1,7 @@
 # Market-Computer-Vision
+To clone this repository, type `git clone --recursive https://github.com/aisu-programming/Market-Computer-Vision.git`.
+
+Notice that the option `--recursive` is necessary because of submodules.
 
 ## Environment setup
 All the requiring packages are list in _requirements.txt_.
@@ -14,6 +17,13 @@ Accordingly, use `wget` to download packages first then install will be a proper
 To do that, type the command `sh setup.sh`, `bash setup.sh` or just `setup.sh`.
 
 Detailed commands are all in the file, follow those commands if something happened accidentally and interrupted the process.
+
+## About models
+The model weights of _Vegetable-Instance-Segmentation_ will be download when `git clone`.
+
+While the model weights of _Customer-Flow-Detection_ has to be download manually.
+
+Please download the weights file here [(yolov4-p5.pt)](https://drive.google.com/file/d/1aXZZE999sHMP1gev60XhNChtHPRMH3Fz/view) and put it into the _Customer_Flow_Detection_ directory.
 
 ## Usage
 The main command is `python3 detect.py`.
