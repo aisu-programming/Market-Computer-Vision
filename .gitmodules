@@ -5,4 +5,4 @@
 [submodule "Vegetable_Instance_Segmentation"]
 	path = Vegetable_Instance_Segmentation
 	url = https://github.com/aisu-programming/Vegetable-Instance-Segmentation.git
-	branch = develop
+	branch = release
