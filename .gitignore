@@ -1,3 +1,8 @@
-inference
+# Environment
 venv4*
+*.pyc
+*.whl
 *.zip
+
+# Training
+inference

@@ -1,0 +1,17 @@
+# Customer-Flow-Detection
+opencv-python==4.5.3.56
+torch
+torchvision
+Pillow
+tqdm
+matplotlib
+PyYAML
+scipy
+tensorboard
+
+# Vegetable-Instance-Segmentation
+tensorflow==2.4.0
+opencv-python==4.5.3.56
+scikit-image
+pycocotools
+tqdm
