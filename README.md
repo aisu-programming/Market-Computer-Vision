@@ -31,6 +31,10 @@ The main command is `python3 detect.py`.
 There are serveral options to adjust:
 - cfd-img-size: the size of input images for the _Customer-Flow-Detection_ task will be resize to this. (default: _96_)
   > Example: `python3 detect.py --cfd-img-size 32` will set the size of input images to 32x32.
+- vis-full-thres: if the prediction amount of input is more than this value, it will be classify to "Full" status. (default: _70_)
+- vis-less-thres: if the prediction amount of input is more than this value, it will be classify to "Less" status. (default: _30_)
+  > Example: `python3 detect.py --vis-full-thres 60 --vis-less-thres 40` will view a 50% amount prediction as "Less" status.
+- vis-smoothing-len: the length of the smoothing array which to prevent unstable predictions. (default: _10_)
 - view-img: add this option to show real-time camera images. (default: _False_)
   > Example: `python3 detect.py --view-img`.
 - sleep: the sleep time after every image was inferenced and predicted. (default: _1_)
