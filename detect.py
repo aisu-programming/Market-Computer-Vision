@@ -192,6 +192,7 @@ def detect():
 
 
     """ Inference """
+    vis_smoothing = []
     for cfd_img, vis_img, original_img in dataset:
 
         start_time = time.time()
@@ -248,12 +249,24 @@ def detect():
         vis_img /= 255.0
 
         vis_pred_start_time = time.time()
-        vis_conf = vis_model(vis_img)[0]
+        vis_pred_amount = int(vis_model(vis_img)[0])
         vis_pred_end_time = time.time()
         
-        vis_pred = ["Full", "Less", "Empty"][np.argmax(vis_conf)]
-        vis_conf = [ f"{['Full', 'Less', 'Empty'][i]}-{str(int(vis_conf[i]*100))}%" for i in range(3) ]
-        s  += f"prediction: {vis_pred} (confidence: {', '.join(vis_conf)})\n\t"
+        # Classfy the prediction amount to status
+        if   vis_pred_amount >= opt.vis_full_thres: vis_pred_status = "Full"
+        elif vis_pred_amount >= opt.vis_less_thres: vis_pred_status = "Less"
+        else                                      : vis_pred_status = "Empty"
+
+        # Smooth the prediction
+        vis_smoothing.append({
+            "Empty": 0,
+            "Less" : 1,
+            "Full" : 2,
+        }[vis_pred_status])
+        if len(vis_smoothing) > opt.vis_smoothing_len: vis_smoothing.remove(vis_smoothing[0])
+        vis_pred_status_smoothed = ["Empty", "Less", "Full"][round(np.average(vis_smoothing))]
+        s += f"prediction amount: {vis_pred_amount}% --> status prediction: {vis_pred_status} (smoothed: {vis_pred_status_smoothed})\n\t"
+        
         vis_end_time = time.time()
         s += f"inference time: {vis_pred_end_time-vis_pred_start_time:.3f}s, "
         s += f"total time: {vis_end_time-vis_start_time:.3f}s\n"
@@ -305,6 +318,12 @@ if __name__ == "__main__":
         default="Vegetable_Instance_Segmentation/weights.h5", help="model.h5 path for 'Vegetable-Instance-Segmentation'")
     parser.add_argument("--vis-img-size", type=int, default=(480, 640),
         help="imput size(pixels) for 'Vegetable-Instance-Segmentation', not recommend to edit")
+    parser.add_argument("--vis-full-thres", type=int, default=70,
+        help="threshold to classify to 'Full' than which predicted amount of vegetable is higher")
+    parser.add_argument("--vis-less-thres", type=int, default=30,
+        help="threshold to classify to 'Less' than which predicted amount of vegetable is higher")
+    parser.add_argument("--vis-smoothing-len", type=int, default=10,
+        help="the length of the smoothing array which to prevent unstable predictions")
 
     # Common
     parser.add_argument("--view-img", action="store_true", help="display results")
