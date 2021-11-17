@@ -157,7 +157,7 @@ def detect():
     os.makedirs(out, exist_ok=True)
     csv_path = str(Path(out) / "records")
     with open(csv_path + ".csv", "w") as f:
-        f.write("time,current customer amount, customer total amount,vegetable status,\n")
+        f.write("time,current customer amount, customer total amount,vegetable amount, vegetable status,vegetable status (smoothed)\n")
         # f.write("time,customer amount,confindence,x,y,w,h,\n")
     total_customer_amount = 0
     last_customer_amount = 0
@@ -288,7 +288,7 @@ def detect():
         if save_csv and save_csv_interval <= 0:
             with open(csv_path + ".csv", "a") as f:
                 now_time = time.strftime('%m.%d-%H.%M.%S', time.localtime())
-                f.write(f"{now_time},{now_customer_amount},{total_customer_amount},{vis_pred}\n")
+                f.write(f"{now_time},{now_customer_amount},{total_customer_amount},{vis_pred_amount},{vis_pred_status},{vis_pred_status_smoothed}\n")
             save_csv_interval = opt.save_csv_interval
 
         # Print time
