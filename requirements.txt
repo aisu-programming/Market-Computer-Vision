@@ -16,4 +16,5 @@ scikit-image
 pycocotools
 tqdm
 
-numpy==1.21.4
+# Manually update numpy is necessary
+# numpy==1.21.4
