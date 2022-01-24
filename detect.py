@@ -148,17 +148,12 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
 
 def detect():
+
     cfd_imgsz, vis_imgsz = opt.cfd_img_size, opt.vis_img_size
-    view_img, out, save_img, save_csv = opt.view_img, opt.output, opt.save_img, opt.save_csv
-
-
+    view_img, save_img, save_csv = opt.view_img, opt.save_img, opt.save_csv
     save_img_interval = opt.save_img_interval
     save_csv_interval = opt.save_csv_interval
-    os.makedirs(out, exist_ok=True)
-    csv_path = str(Path(out) / "records")
-    with open(csv_path + ".csv", "w") as f:
-        f.write("time,current customer amount, customer total amount,vegetable amount, vegetable status,vegetable status (smoothed)\n")
-        # f.write("time,customer amount,confindence,x,y,w,h,\n")
+    
     total_customer_amount = 0
     last_customer_amount = 0
 
@@ -192,9 +187,21 @@ def detect():
 
 
     """ Inference """
+    date = ''
     vis_smoothing = []
     for cfd_img, vis_img, original_img in dataset:
 
+        # Update output directory if it is a new day
+        if date != time.strftime("%m.%d-%H.%M", time.localtime()):
+            date = time.strftime("%m.%d-%H.%M", time.localtime())
+            out = f"inference/{time.strftime('%m.%d-%H.%M', time.localtime())}"
+            os.makedirs(out, exist_ok=True)
+            csv_path = str(Path(out) / "records.csv")
+            if save_csv:
+                with open(csv_path, "w") as f:
+                    f.write("time,current customer amount, customer total amount,vegetable amount, vegetable status,vegetable status (smoothed)\n")
+                    # f.write("time,customer amount,confindence,x,y,w,h,\n")
+                
         start_time = time.time()
         oi = original_img[0].copy()
 
@@ -286,7 +293,7 @@ def detect():
 
         # Save results to csv file
         if save_csv and save_csv_interval <= 0:
-            with open(csv_path + ".csv", "a") as f:
+            with open(csv_path, "a") as f:
                 now_time = time.strftime('%m.%d-%H.%M.%S', time.localtime())
                 f.write(f"{now_time},{now_customer_amount},{total_customer_amount},{vis_pred_amount},{vis_pred_status},{vis_pred_status_smoothed}\n")
             save_csv_interval = opt.save_csv_interval
@@ -328,8 +335,8 @@ if __name__ == "__main__":
     # Common
     parser.add_argument("--view-img", action="store_true", help="display results")
     parser.add_argument("--sleep", type=int, default=1, help="sleep time between each inference")
-    parser.add_argument("--output", type=str, help="output folder",
-        default=f"inference/{time.strftime('%m.%d-%H.%M', time.localtime())}")  # output folder
+    # parser.add_argument("--output", type=str, help="output folder",
+    #     default=f"inference/{time.strftime('%m.%d-%H.%M', time.localtime())}")  # output folder
     parser.add_argument("--save-img", action="store_true", help="save images")
     parser.add_argument("--save-img-interval", type=int, default=10, help="interval time(seconds) between every images saving")
     parser.add_argument("--save-csv", action="store_true", help="save results to csv")
