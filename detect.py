@@ -192,8 +192,8 @@ def detect():
     for cfd_img, vis_img, original_img in dataset:
 
         # Update output directory if it is a new day
-        if date != time.strftime("%m.%d-%H.%M", time.localtime()):
-            date = time.strftime("%m.%d-%H.%M", time.localtime())
+        if date != time.strftime("%D", time.localtime()):
+            date = time.strftime("%D", time.localtime())
             out = f"inference/{time.strftime('%m.%d-%H.%M', time.localtime())}"
             os.makedirs(out, exist_ok=True)
             csv_path = str(Path(out) / "records.csv")
