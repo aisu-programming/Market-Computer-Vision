@@ -1,5 +1,5 @@
-[submodule "Footfall_Detection"]
-	path = Footfall_Detection
+[submodule "Footfall-Detection"]
+	path = Footfall-Detection
 	url = https://github.com/aisu-programming/Footfall-Detection.git
 	branch = release
 [submodule "Vegetable_Instance_Segmentation"]
