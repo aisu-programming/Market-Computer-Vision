@@ -13,8 +13,8 @@ import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 from numpy import random
-from Customer_Flow_Detection.utils.general import check_img_size, non_max_suppression, scale_coords, xyxy2xywh, plot_one_box
-from Customer_Flow_Detection.utils.torch_utils import select_device
+from Footfall_Detection.utils.general import check_img_size, non_max_suppression, scale_coords, xyxy2xywh, plot_one_box
+from Footfall_Detection.utils.torch_utils import select_device
 
 # Vegetable-Instance-Segmentation libraries
 from Vegetable_Instance_Segmentation.model.simple_CNN import SimpleCNN

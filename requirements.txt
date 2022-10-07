@@ -1,4 +1,4 @@
-# Customer-Flow-Detection
+# Footfall-Detection
 opencv-python==4.5.3.56
 torch  #==1.9.0
 torchvision  #==1.10.0

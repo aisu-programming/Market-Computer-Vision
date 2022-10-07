@@ -1,6 +1,6 @@
-[submodule "Customer_Flow_Detection"]
-	path = Customer_Flow_Detection
-	url = https://github.com/aisu-programming/Customer-Flow-Detection.git
+[submodule "Footfall_Detection"]
+	path = Footfall_Detection
+	url = https://github.com/aisu-programming/Footfall-Detection.git
 	branch = release
 [submodule "Vegetable_Instance_Segmentation"]
 	path = Vegetable_Instance_Segmentation
