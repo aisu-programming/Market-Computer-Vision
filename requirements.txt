@@ -1,20 +1,25 @@
-# Footfall-Detection
+### Footfall-Detection
+torch==1.9
+torchvision==0.10
 opencv-python==4.5.3.56
-torch  #==1.9.0
-torchvision  #==1.10.0
-Pillow
-tqdm
 matplotlib
 PyYAML
 scipy
-tensorboard
-
-# Vegetable-Instance-Segmentation
-tensorflow==2.4.0rc4
-opencv-python==4.5.3.56
-scikit-image
-pycocotools
 tqdm
+# Pillow
+# tensorboard
 
-# Manually update numpy is necessary
-# numpy==1.21.4
+
+### Shelf-Empty-Detection
+pandas
+seaborn
+
+
+### Vegetable-Instance-Segmentation
+# tensorflow==2.4.0rc4
+# opencv-python==4.5.3.56
+# scikit-image
+# pycocotools
+# tqdm
+
+# numpy==1.21.4  # Manually update numpy is necessary

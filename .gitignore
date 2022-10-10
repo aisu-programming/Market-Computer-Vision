@@ -6,3 +6,4 @@ venv4*
 
 # Training
 inference
+*.jpg

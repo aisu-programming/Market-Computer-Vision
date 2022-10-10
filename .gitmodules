@@ -6,3 +6,7 @@
 	path = Footfall_Detection
 	url = https://github.com/aisu-programming/Footfall-Detection.git
 	branch = release
+[submodule "Shelf_Empty_Detection"]
+	path = Shelf_Empty_Detection
+	url = https://github.com/aisu-programming/Shelf-Empty-Detection.git
+	branch = release
