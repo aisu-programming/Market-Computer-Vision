@@ -22,4 +22,12 @@ seaborn
 # pycocotools
 # tqdm
 
+
+# Google sheets
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+
+
+# Misc
 # numpy==1.21.4  # Manually update numpy is necessary
