@@ -253,7 +253,7 @@ if __name__ == "__main__":
 
     """ Footfall-Detection """
     parser.add_argument("--fd-weights", nargs="+", type=str,
-        default="Footfall_Detection/yolov4-p5.pt", help="model.pt path for 'Footfall-Detection'")
+        default="Footfall_Detection/footfall-detection.pt", help="model.pt path for 'Footfall-Detection'")
     parser.add_argument("--fd-img-size", type=int, default=640,
         help="imput size(pixels) for 'Footfall-Detection', must be multiple of 32")
     parser.add_argument("--fd-conf-thres", type=float, default=0.3, help="object confidence threshold")
@@ -261,7 +261,7 @@ if __name__ == "__main__":
 
     # """ Vegetable-Instance-Segmentation """
     # parser.add_argument("--vis-weights", nargs="+", type=str,
-    #     default="Vegetable_Instance_Segmentation/weights.h5", help="model.h5 path for 'Vegetable-Instance-Segmentation'")
+    #     default="Vegetable_Instance_Segmentation/vegetable-instance-segmentation.h5", help="model.h5 path for 'Vegetable-Instance-Segmentation'")
     # parser.add_argument("--vis-img-size", type=int, default=(480, 640),
     #     help="imput size(pixels) for 'Vegetable-Instance-Segmentation', not recommend to edit")
     # parser.add_argument("--vis-full-thres", type=int, default=70,
@@ -273,7 +273,7 @@ if __name__ == "__main__":
 
     """ Shelf-Empty-Detection """
     parser.add_argument("--sed-weights", nargs="+", type=str,
-        default="Shelf_Empty_Detection/best.pt", help="model.pt path for 'Shelf-Empty-Detection'")
+        default="Shelf_Empty_Detection/shelf-empty-detection.pt", help="model.pt path for 'Shelf-Empty-Detection'")
     parser.add_argument("--sed-img-size", type=int, default=640,
         help="imput size(pixels) for 'Shelf-Empty-Detection', must be multiple of 32")
     parser.add_argument("--sed-alert-amount-thres", type=float, default=0.15, help="threshold for stock amount to be alert")
