@@ -81,8 +81,9 @@ def detect(opt):
             if save_csv or save_img:
                 os.makedirs(out, exist_ok=True)
             if save_csv:
-                with open(csv_path, "w") as f:
-                    f.write("time,current people amount,total people amount,alert stock amount,alert stock amount (smoothed)\n")
+                if not os.path.exists(csv_path):
+                    with open(csv_path, "w") as f:
+                        f.write("time,current people amount,total people amount,alert stock amount,alert stock amount (smoothed)\n")
             if save_google_sheet:
                 try:
                     create_sheet(google_sid, date)
