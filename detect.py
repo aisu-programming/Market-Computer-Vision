@@ -6,21 +6,24 @@ import time
 import argparse
 import torch
 import torch.backends.cudnn as cudnn
+import numpy as np
 # from numpy import random
-from utils import LoadImages, LoadStreams, fd_attempt_load, hex2rgb
 from pathlib import Path
+
+from utils import LoadImages, LoadStreams, fd_attempt_load, hex2rgb, write_google_sheet
+from google_sheet_functions import create_sheet
 
 # Shelf-Empty-Detection libraries
 from Shelf_Empty_Detection.models.common import DetectMultiBackend
 from Shelf_Empty_Detection.utils.general import non_max_suppression as sed_non_max_suppression
 
+# # Vegetable-Instance-Segmentation libraries
+# from Vegetable_Instance_Segmentation.model.simple_CNN import SimpleCNN
+
 # Footfall-Detection libraries
 from Footfall_Detection.utils.general import check_img_size, scale_coords, plot_one_box
 from Footfall_Detection.utils.general import non_max_suppression as fd_non_max_suppression
 from Footfall_Detection.utils.torch_utils import select_device
-
-# # Vegetable-Instance-Segmentation libraries
-# from Vegetable_Instance_Segmentation.model.simple_CNN import SimpleCNN
 
 
 
@@ -28,20 +31,22 @@ from Footfall_Detection.utils.torch_utils import select_device
 def detect(opt):
 
     fd_imgsz, sed_imgsz = opt.fd_img_size, opt.sed_img_size
-    view_img, save_img, save_csv = opt.view_img, opt.save_img, opt.save_csv
+    view_img, save_img, save_csv, save_google_sheet = opt.view_img, opt.save_img, opt.save_csv, opt.save_google_sheet
     save_img_interval = opt.save_img_interval
     save_csv_interval = opt.save_csv_interval
+    save_google_sheet_interval = opt.save_google_sheet_interval
+    google_sid                 = opt.google_sid
     
     total_customer_amount = 0
     last_customer_amount = 0
     device = select_device("cpu")
 
-
     # Set Dataloader
     cudnn.benchmark = True  # set True to speed up constant image size inference
-    # dataset = LoadStreams(fd_imgsz=fd_imgsz, sed_imgsz=sed_imgsz)
-    dataset = LoadImages(".", img_size=fd_imgsz)
-
+    if opt.test:
+        dataset = LoadImages("test/", img_size=fd_imgsz)
+    else:
+        dataset = LoadStreams(fd_imgsz=fd_imgsz, sed_imgsz=sed_imgsz)
 
     """ Shelf-Empty-Detection model """
     # Load model
@@ -49,48 +54,45 @@ def detect(opt):
     sed_model.warmup((1, 3, sed_imgsz, sed_imgsz))  # warmup
     sed_imgsz = check_img_size(sed_imgsz, s=sed_model.stride)  # check img_size
 
-    # # Get names and colors
-    # names = sed_model.module.names if hasattr(sed_model, "module") else sed_model.names
-    # colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
-
-
     """ Footfall-Detection model """
     # Load model
     fd_model = fd_attempt_load(opt.fd_weights, map_location=device)  # load FP32 fd_model
-    # fd_imgsz = check_img_size(fd_imgsz, s=fd_model.stride.max())  # check img_size
-
-    # # Get names and colors
-    # names = fd_model.module.names if hasattr(fd_model, "module") else fd_model.names
-    # colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
-
-    # Run inference
-    # img = torch.zeros((1, 3, fd_imgsz, fd_imgsz), device=device)  # init img
-    # _ = fd_model(img)
-
+    fd_imgsz = check_img_size(fd_imgsz, s=fd_model.stride.max())  # check img_size
+    img = torch.zeros((1, 3, fd_imgsz, fd_imgsz), device=device)  # init img
+    _ = fd_model(img)
 
     # """ Vegetable-Instance-Segmentation model """
     # vis_model = SimpleCNN(dropout=0)
     # vis_model.build(input_shape=(None, 640, 480, 3))
     # vis_model.load_weights(opt.vis_weights)
 
-
     """ Inference """
     date = ''
     # vis_smoothing = []
+    sed_smoothing = []
     # for fd_img, vis_img, original_img in dataset:
     for fd_img, sed_img, original_img in dataset:
 
         # Update output directory if it is a new day
-        if date != time.strftime("%D", time.localtime()):
-            date = time.strftime("%D", time.localtime())
-            out = f"inference/{time.strftime('%m.%d-%H.%M', time.localtime())}"
-            os.makedirs(out, exist_ok=True)
+        if date != time.strftime("%Y/%m/%d", time.localtime()):
+            date = time.strftime("%Y/%m/%d", time.localtime())
+            out = f"inference/{time.strftime('%Y.%m.%d', time.localtime())}"
             csv_path = str(Path(out) / "records.csv")
+            if save_csv or save_img:
+                os.makedirs(out, exist_ok=True)
             if save_csv:
                 with open(csv_path, "w") as f:
-                    # f.write("time,customer amount,confindence,x,y,w,h,\n")
-                    # f.write("time,current customer amount, customer total amount,vegetable amount, vegetable status,vegetable status (smoothed)\n")
-                    f.write("time,accumulated people amount in period, total accumulated people amount,alert stock amount,alert stock amount (smoothed)\n")
+                    f.write("time,current people amount,total people amount,alert stock amount,alert stock amount (smoothed)\n")
+            if save_google_sheet:
+                try:
+                    create_sheet(google_sid, date)
+                    write_google_sheet(
+                        google_sid, date,
+                        "time", "current people amount", "total people amount",
+                        "alert stock amount", "alert stock amount (smoothed)"
+                    )
+                except:
+                    pass
                 
         start_time = time.time()
         oi = original_img.copy()
@@ -115,11 +117,11 @@ def detect(opt):
 
             # Get customer amount
             for c in fd_pred[:, -1].unique():
-                now_customer_amount = (fd_pred[:, -1] == c).sum()
+                now_customer_amount = (fd_pred[:, -1] == c).sum().item()
 
             # Add bbox to image
-            for i, (*xyxy, conf, _) in enumerate(fd_pred):
-                if save_img or view_img:
+            if save_img or view_img:
+                for i, (*xyxy, conf, _) in enumerate(fd_pred):
                     label = f"Person no.{i+1}: conf {int(conf*100)}%"
                     plot_one_box(xyxy, oi, label=label, color=hex2rgb("#DD0000"), line_thickness=5)
 
@@ -181,47 +183,61 @@ def detect(opt):
         sed_inf_end_time = time.time()
         
         sed_pred = sed_non_max_suppression(sed_pred, opt.sed_conf_thres, opt.sed_iou_thres, max_det=30, nm=32, single_special_cls=True)
-        alert_stock_number = len(sed_pred)
+        sed_alert_stock_amount = 0
         for i, det in enumerate(sed_pred):  # per image
             # Rescale boxes from img_size to oi size
             det[:, :4] = scale_coords(sed_img.shape[2:], det[:, :4], oi.shape).round()
 
             # Process predictions
             for *xyxy, conf, cls, amount in reversed(det[:, :7]):
+                if amount <= opt.sed_alert_amount_thres: sed_alert_stock_amount += 1
                 if save_img or view_img:
                     label = f"{amount.numpy():.1f} (conf: {int(conf*100)}%)"
                     plot_one_box(xyxy, oi, label=label, color=hex2rgb("#0000DD"), line_thickness=5)
 
-        s += f"detected {alert_stock_number} stock\n\t"
+        sed_smoothing.append(sed_alert_stock_amount)
+        if len(sed_smoothing) > opt.sed_smoothing_len: sed_smoothing.remove(sed_smoothing[0])
+        sed_alert_stock_amount_smoothed = round(np.average(sed_smoothing))
+
+        s += f"detected {sed_alert_stock_amount} stock\n\t"
         sed_end_time = time.time()
         s += f"inference time: {sed_inf_end_time-sed_inf_start_time:.3f}s, "
         s += f"total time: {sed_end_time-sed_start_time:.3f}s\n"
 
         # Stream results
-        if view_img:
+        if not opt.test and view_img:
             cv2.imshow("Camera", oi)
             if cv2.waitKey(1) == ord('q'):  # q to quit
                 raise StopIteration
 
         # Save image with detections
         if save_img and save_img_interval <= 0:
-            save_path = str(Path(out) / Path(time.strftime("%m.%d-%H.%M.%S", time.localtime())))
-            cv2.imwrite(f"{save_path}.png", oi)
+            filename = str(Path(out) / Path(time.strftime("%H.%M.%S.png", time.localtime())))
+            cv2.imwrite(filename, oi)
             save_img_interval = opt.save_img_interval
 
         # Save results to csv file
         if save_csv and save_csv_interval <= 0:
             with open(csv_path, "a") as f:
-                now_time = time.strftime('%m.%d-%H.%M.%S', time.localtime())
-                # f.write(f"{now_time},{now_customer_amount},{total_customer_amount},{vis_pred_amount},{vis_pred_status},{vis_pred_status_smoothed}\n")
-                f.write(f"{now_time},{now_customer_amount},{total_customer_amount}\n")
+                now_time = time.strftime("%H:%M:%S", time.localtime())
+                f.write(f"{now_time},{now_customer_amount},{total_customer_amount},{sed_alert_stock_amount},{sed_alert_stock_amount_smoothed}\n")
             save_csv_interval = opt.save_csv_interval
+
+        # Save results to Google sheet
+        if save_google_sheet and save_google_sheet_interval <= 0:
+            write_google_sheet(
+                google_sid, date,
+                now_time, now_customer_amount, total_customer_amount,
+                sed_alert_stock_amount, sed_alert_stock_amount_smoothed
+            )
+            save_google_sheet_interval = opt.save_google_sheet_interval
 
         # Print time
         print(f"{s}Finished in {time.time()-start_time:.3f}s, start to sleep {opt.sleep}s\n")
         time.sleep(opt.sleep)
-        save_csv_interval -= (time.time()-start_time)
-        save_img_interval -= (time.time()-start_time)
+        save_img_interval          -= (time.time()-start_time)
+        save_csv_interval          -= (time.time()-start_time)
+        save_google_sheet_interval -= (time.time()-start_time)
 
     return
 
@@ -231,7 +247,6 @@ def detect(opt):
 if __name__ == "__main__":
 
     DEFAULT_SPREADSHEET_ID = "1cJNbeULQvetY2LEde1RDGsu_31JY_Av_AQMNBkaAvWQ"
-    DEFAULT_RANGE_NAME = "2022/10/10"
 
     parser = argparse.ArgumentParser()
 
@@ -260,22 +275,31 @@ if __name__ == "__main__":
         default="Shelf_Empty_Detection/best.pt", help="model.pt path for 'Shelf-Empty-Detection'")
     parser.add_argument("--sed-img-size", type=int, default=640,
         help="imput size(pixels) for 'Shelf-Empty-Detection', must be multiple of 32")
+    parser.add_argument("--sed-alert-amount-thres", type=float, default=0.15, help="threshold for stock amount to be alert")
     parser.add_argument("--sed-conf-thres", type=float, default=0.3, help="object confidence threshold")
     parser.add_argument("--sed-iou-thres", type=float, default=0.5, help="IOU threshold for NMS")
+    parser.add_argument("--sed-smoothing-len", type=int, default=10,
+        help="the length of the smoothing array which to prevent unstable predictions")
 
     """ Common """
+    parser.add_argument("--test", action="store_true", help="test inference by using testing images")
     parser.add_argument("--view-img", action="store_true", help="display results")
-    parser.add_argument("--sleep", type=int, default=1, help="sleep time between each inference")
+    parser.add_argument("--sleep", type=int, default=3, help="sleep time between each inference")
     # parser.add_argument("--output", type=str, help="output folder",
-    #     default=f"inference/{time.strftime('%m.%d-%H.%M', time.localtime())}")  # output folder
+    #     default=f"inference/{time.strftime('%Y.%m.%d', time.localtime())}")  # output folder
     parser.add_argument("--save-img", action="store_true", help="save images")
     parser.add_argument("--save-img-interval", type=int, default=0, help="interval time(seconds) between every images saving")
     parser.add_argument("--save-csv", action="store_true", help="save results to csv")
-    parser.add_argument("--save-csv-interval", type=int, default=5, help="interval time(seconds) between every record lines in csv")
+    parser.add_argument("--save-csv-interval", type=int, default=0, help="interval time(seconds) between every record lines in csv")
+    parser.add_argument("--save-google-sheet", action="store_true", help="save results to google sheet")
+    parser.add_argument("--save-google-sheet-interval", type=int, default=0, help="interval time(seconds) between every record lines in google sheet")
     parser.add_argument("--google-sid", type=str, default=DEFAULT_SPREADSHEET_ID, help="Spreadsheet ID of the target Google Sheet")
-    parser.add_argument("--google-range", type=str, default=DEFAULT_RANGE_NAME, help="Range Name of the target Google Sheet")
 
     opt = parser.parse_args()
     print(opt)
+
+    if opt.save_google_sheet:
+        assert opt.google_sid != '', 'The argument "--google-sid" must not be empty string.'
+
     with torch.no_grad():
         detect(opt)

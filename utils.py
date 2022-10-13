@@ -238,16 +238,16 @@ def write_google_sheet(
     spreadsheet_id,
     range_name,
     time,
-    accumulated_people_amount_in_period,
-    total_accumulated_people_amount,
+    current_people_amount,
+    total_people_amount,
     alert_stock_amount,
     alert_stock_amount_smoothed
 ):
-    apa  = accumulated_people_amount_in_period
-    tapa = total_accumulated_people_amount
+    cpa  = current_people_amount
+    tpa  = total_people_amount
     asa  = alert_stock_amount
     asas = alert_stock_amount_smoothed
     return append_values(
         spreadsheet_id, range_name,
-        [[ time, apa, tapa, asa, asas ]]
+        [[ time, cpa, tpa, asa, asas ]]
     )

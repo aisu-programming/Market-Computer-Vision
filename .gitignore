@@ -8,3 +8,4 @@ venv4*
 inference
 *.jpg
 *.json
+test
