@@ -4,48 +4,55 @@ To clone this repository, type `git clone --recursive https://github.com/aisu-pr
 Notice that the option `--recursive` is necessary because of submodules.
 
 ## Environment setup
-All the requiring packages are list in _requirements.txt_.
+1. Type the command `sh setup-torch.sh` to install PyTorch (version 1.9) for Raspberry Pi 32-bits OS with Python 3.7.
+2. Type the command `sh setup-torchvision.sh` to install torchvision (version 0.10) for Raspberry Pi 32-bits OS with Python 3.7.
+3. Type the command `sh setup-others.sh` to install all other requirements.
 
-Simply type command `pip3 install -r requirements.txt` to install them.
-
-However, download source codes and build it on _RaspberryPi 3_ is extremely slow. (It may cost more than 3 days.)
-
-Also, due to slow WiFi speed of _RaspberryPi 3_, the connection to download packages from the cloud is likely to be cut off because it cost too much time.
-
-Accordingly, use `wget` to download packages first then install will be a proper way.
-
-To do that, type the command `sh setup.sh`, `bash setup.sh` or just `setup.sh`.
-
-Detailed commands are all in the file, follow those commands if something happened accidentally and interrupted the process.
-
-## About models
-The model weights of _Vegetable-Instance-Segmentation_ will be download when `git clone`.
-
-While the model weights of _Customer-Flow-Detection_ has to be download manually.
-
-Please download the weights file here [(yolov4-p5.pt)](https://drive.google.com/file/d/1aXZZE999sHMP1gev60XhNChtHPRMH3Fz/view) and put it into the _Customer_Flow_Detection_ directory.
+## Download models
+Type the command `sh download-weights.sh` to download all model's weights files.
 
 ## Usage
 The main command is `python3 detect.py`.
 
-There are serveral options to adjust:
-- cfd-img-size: the size of input images for the _Customer-Flow-Detection_ task will be resize to this. (default: _96_)
-  > Example: `python3 detect.py --cfd-img-size 32` will set the size of input images to 32x32.
-- vis-full-thres: if the prediction amount of input is more than this value, it will be classify to "Full" status. (default: _70_)
-- vis-less-thres: if the prediction amount of input is more than this value, it will be classify to "Less" status. (default: _30_)
-  > Example: `python3 detect.py --vis-full-thres 60 --vis-less-thres 40` will view a 50% amount prediction as "Less" status.
-- vis-smoothing-len: the length of the smoothing array which to prevent unstable predictions. (default: _10_)
-- view-img: add this option to show real-time camera images. (default: _False_)
-  > Example: `python3 detect.py --view-img`.
-- sleep: the sleep time after every image was inferenced and predicted. (default: _1_)
-  > Example: `python3 detect.py --sleep 3` for sleeping 3 seconds after every image.
-- save-img: save image to the output directory or not. (default: _False_)
-  > Example: `python3 detect.py --save-img`.
-- save-img-interval: save image to output directory per seconds. (default: _10_)
-  > Example: `python3 detect.py --save-img-interval 60` for saving image every 1 minute.
-- save-csv: save every inference results and prediction results to csv file or not. (default: _False_)
-  > Example: `python3 detect.py --save-csv`.
-- save-csv-interval: save records to csv file per seconds. (default: _5_)
-  > Example: `python3 detect.py --save-csv-interval 60` for saving records every 1 minute.
+There are serveral options can be add:
 
-Please combine options or edit default value of each options in _detect.py_.
+- `--fd`: enable the *Footfall-Detection* function. (default: *False*)
+  > Example: `python3 detect.py --fd`.
+- `--fd-img-size <int>`: the size of input images for the *Footfall-Detection* task will be resize to this. (default: *64*)
+  > Example: `python3 detect.py --fd-img-size 32` will set the size of input images to 32x32.
+
+<!--
+- `--vis-full-thres`: if the prediction amount of input is more than this value, it will be classify to "Full" status. (default: _70_)
+- `--vis-less-thres`: if the prediction amount of input is more than this value, it will be classify to "Less" status. (default: _30_)
+  > Example: `python3 detect.py --vis-full-thres 60 --vis-less-thres 40` will view a 50% amount prediction as "Less" status.
+- `--vis-smoothing-len`: the length of the smoothing array which to prevent unstable predictions. (default: _10_)
+-->
+
+- `--sed`: enable the *Shelf-Empty-Detection* function. (default: *False*)
+  > Example: `python3 detect.py --sed`.
+- `--sed-img-size <int>`: the size of input images for the *Shelf-Empty-Detection* task will be resize to this. (default: *256*)
+  > Example: `python3 detect.py --sed-img-size 128` will set the size of input images to 128x128.
+- `--sed-alert-amount-thres <float>`: the amount threshold to view a stock as empty. (default: *0.5*)
+  > Example: `python3 detect.py --sed-alert-amount-thres 0.3` will set the alert amount to 0.3.
+- `--sed-smoothing-len <int>`: the length of the smoothing array which to prevent unstable predictions. (default: _10_)
+  > Example: `python3 detect.py --sed-smoothing-len 20` will set the length of the smoothing array to 20.
+- `--test`: use the testing images in *test* directory to test the inference. (default: _False_)
+  > Example: `python3 detect.py --test`.
+- `--view-img`: show real-time camera images. (default: _False_)
+  > Example: `python3 detect.py --view-img`.
+- `--sleep <int>`: the sleep time between every inference. (default: _0_)
+  > Example: `python3 detect.py --sleep 3` for sleeping 3 seconds after every image.
+- `--save-img`: save inferenced images to the output directory or not. (default: _False_)
+  > Example: `python3 detect.py --save-img`.
+- `--save-img-interval <int>`: save inferenced images to output directory per seconds. (default: _900_)
+  > Example: `python3 detect.py --save-img-interval 60` for saving image every 1 minute (60 seconds).
+- `--save-csv`: save results to csv file or not. (default: _False_)
+  > Example: `python3 detect.py --save-csv`.
+- `--save-csv-interval <int>`: save results to csv file per seconds. (default: _900_)
+  > Example: `python3 detect.py --save-csv-interval 60` for saving records every 1 minute (60 seconds).
+- `--save-google-sheet`: save results to google sheet or not. (default: _False_)
+  > Example: `python3 detect.py --save-google-sheet`.
+- `--save-google-sheet-interval <int>`: save results to google sheet per seconds. (default: *900*)
+  > Example: `python3 detect.py --save-google-sheet-interval 60` for saving records every 1 minute (60 seconds).
+
+Combine above options or edit default value of each options in *detect.py*.
