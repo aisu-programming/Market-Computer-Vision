@@ -57,3 +57,8 @@ There are serveral options can be add:
   > Example: `python3 detect.py --save-google-sheet-interval 60` for saving records every 1 minute (60 seconds).
 
 Combine above options or edit default value of each options in *detect.py*.
+
+## About the OS
+I used the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+
+The OS I chose is the **Raspberry Pi OS (Legacy)**, which is 32-bits and with the Python version 3.7.
