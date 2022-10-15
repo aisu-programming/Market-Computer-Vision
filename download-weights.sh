@@ -13,8 +13,7 @@ then
 fi
 
 cd Shelf_Empty_Detection
-rm shelf-empty-detection-0.75.pt
-wget https://github.com/aisu-programming/Shelf-Empty-Detection/releases/download/v1.0/shelf-empty-detection-0.75.pt
-# rm shelf-empty-detection-1.0.pt
-# wget https://github.com/aisu-programming/Shelf-Empty-Detection/releases/download/v1.0/shelf-empty-detection-1.0.pt
+rm -rf shelf-empty-detection-*
+wget https://github.com/aisu-programming/Shelf-Empty-Detection/releases/download/v1.0/shelf-empty-detection-640-0.75.pt
+wget https://github.com/aisu-programming/Shelf-Empty-Detection/releases/download/v1.1/shelf-empty-detection-256-1.0.pt
 cd ..
