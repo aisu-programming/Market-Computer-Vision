@@ -244,7 +244,9 @@ def detect(opt):
 """ Execution """
 if __name__ == "__main__":
 
-    DEFAULT_SPREADSHEET_ID = "1cJNbeULQvetY2LEde1RDGsu_31JY_Av_AQMNBkaAvWQ"
+    from dotenv import load_dotenv
+    load_dotenv(".env")
+    DEFAULT_SPREADSHEET_ID = os.environ.get("DEFAULT_SPREADSHEET_ID")
 
     parser = argparse.ArgumentParser()
 
