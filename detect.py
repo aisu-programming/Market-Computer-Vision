@@ -21,10 +21,10 @@ def detect(opt):
     vis_imgsz = False if not opt.vis else opt.vis_img_size
     sed_imgsz = False if not opt.sed else opt.sed_img_size
     view_img, save_img, save_csv, save_google_sheet = opt.view_img, opt.save_img, opt.save_csv, opt.save_google_sheet
-    save_img_interval = opt.save_img_interval
-    save_csv_interval = opt.save_csv_interval
-    save_google_sheet_interval = opt.save_google_sheet_interval
-    google_sid                 = opt.google_sid
+    save_img_interval          = 0
+    save_csv_interval          = 0
+    save_google_sheet_interval = 0
+    google_sid = opt.google_sid
 
     # Set Dataloader
     cudnn.benchmark = True  # set True to speed up constant image size inference
@@ -55,8 +55,8 @@ def detect(opt):
 
     """ Footfall-Detection model """
     if opt.fd:
-        last_customer_amount = 0
-        total_people_amount = 0
+        last_customer_amount     = 0
+        total_people_amount      = 0
         last_total_people_amount = 0
         from Footfall_Detection.utils.general import non_max_suppression as fd_non_max_suppression
         fd_model = fd_attempt_load(opt.fd_weights, map_location=device)  # load FP32 fd_model
@@ -64,8 +64,9 @@ def detect(opt):
         img = torch.zeros((1, 3, fd_imgsz, fd_imgsz), device=device)  # init img
         _ = fd_model(img)
     else:
-        total_people_amount = "N/A"
-        now_people_amount   = "N/A"
+        # now_people_amount       = "N/A"
+        total_people_amount     = "N/A"
+        people_amount_in_period = "N/A"
 
     """ Inference """
     date = ''
@@ -229,7 +230,9 @@ def detect(opt):
 
         # Save results to csv file and Google sheet
         now_time = time.strftime("%H:%M:%S", time.localtime())
-        people_amount_in_period = total_people_amount - last_total_people_amount
+        if opt.fd:
+            people_amount_in_period = total_people_amount - last_total_people_amount
+            
         if save_csv and save_csv_interval <= 0:
             with open(csv_path, "a") as f:
                 f.write(f"{now_time},{people_amount_in_period},{total_people_amount},{sed_alert_stock_amount},{sed_alert_stock_amount_smoothed}\n")
