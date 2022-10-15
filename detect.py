@@ -292,7 +292,7 @@ if __name__ == "__main__":
         default="Shelf_Empty_Detection/shelf-empty-detection-0.75.pt", help="model.pt path for 'Shelf-Empty-Detection'")
     parser.add_argument("--sed-img-size", type=int, default=256,
         help="imput size(pixels) for 'Shelf-Empty-Detection', must be multiple of 32")
-    parser.add_argument("--sed-alert-amount-thres", type=float, default=0.15, help="threshold for stock amount to be alert")
+    parser.add_argument("--sed-alert-amount-thres", type=float, default=0.5, help="threshold for stock amount to be alert")
     parser.add_argument("--sed-conf-thres", type=float, default=0.3, help="object confidence threshold")
     parser.add_argument("--sed-iou-thres", type=float, default=0.5, help="IOU threshold for NMS")
     parser.add_argument("--sed-smoothing-len", type=int, default=10,
