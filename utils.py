@@ -73,12 +73,14 @@ def letterbox(img, new_shape, color=(114, 114, 114), auto=True, scaleFill=False,
 
 
 class LoadStreams:  # multiple IP or RTSP cameras
-    def __init__(self, fd_imgsz=96, vis_imgsz=(480, 640), sed_imgsz=96):
-        self.mode = 'images'
-        self.fd_imgsz = fd_imgsz
-        # self.vis_imgsz = vis_imgsz
+    def __init__(self, fd_imgsz=False, vis_imgsz=False, sed_imgsz=False):
+        self.mode = "images"
+        self.fd        = bool(fd_imgsz)
+        self.vis       = bool(vis_imgsz)
+        self.sed       = bool(sed_imgsz)
+        self.fd_imgsz  = fd_imgsz
+        self.vis_imgsz = vis_imgsz
         self.sed_imgsz = sed_imgsz
-
         self.imgs = [None]
         cap = cv2.VideoCapture(0)
         assert cap.isOpened(), "Failed to open camera"
@@ -89,12 +91,6 @@ class LoadStreams:  # multiple IP or RTSP cameras
         thread = Thread(target=self.update, args=([0, cap]), daemon=True)
         print("Successfully open camera (%gx%g at %.2f FPS).\n" % (w, h, fps))
         thread.start()
-
-        # check for common shapes
-        s = np.stack([letterbox(x, new_shape=self.fd_imgsz)[0].shape for x in self.imgs], 0)  # inference shapes
-        self.rect = np.unique(s, axis=0).shape[0] == 1  # rect inference if all shapes equal
-        if not self.rect:
-            print("[WARNING] Different stream shapes detected. For optimal performance supply similarly-shaped streams.\n")
 
     def update(self, index, cap):
         # Read next stream frame in a daemon thread
@@ -114,117 +110,84 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
     def __next__(self):
         self.count += 1
-        original_img = self.imgs.copy()
-        if cv2.waitKey(1) == ord('q'):  # q to quit
-            cv2.destroyAllWindows()
-            raise StopIteration
-
-        # Letterbox
-        fd_img = [letterbox(x, new_shape=self.fd_imgsz, auto=self.rect)[0] for x in original_img]
-        # vis_img = [letterbox(x, new_shape=self.vis_imgsz, auto=self.rect)[0] for x in original_img]
-        sed_img = [letterbox(x, new_shape=self.sed_imgsz, auto=self.rect)[0] for x in original_img]
-
-        # Stack
-        fd_img = np.stack(fd_img, 0)
-        # vis_img = np.stack(vis_img, 0)
-        sed_img = np.stack(sed_img, 0)
-
-        # # Convert
-        fd_img = fd_img[:, :, :, ::-1].transpose(0, 3, 1, 2)  # BGR to RGB, to bsx3x416x416
-        fd_img = np.ascontiguousarray(fd_img)
-        # vis_img = vis_img[:, :, :, ::-1].transpose(0, 3, 1, 2)  # BGR to RGB, to bsx3x416x416
-        # vis_img = np.ascontiguousarray(vis_img)
-        sed_img = sed_img[:, :, :, ::-1].transpose(0, 3, 1, 2)  # BGR to RGB, to bsx3x416x416
-        sed_img = np.ascontiguousarray(sed_img)
-
-        # return fd_img, vis_img, original_img
-        return fd_img, sed_img, original_img
+        fd_img, vis_img, sed_img = None, None, None
+        original_imgs = self.imgs.copy()
+        # if cv2.waitKey(1) == ord('q'):  # q to quit
+        #     cv2.destroyAllWindows()
+        #     raise StopIteration
+        if self.fd:
+            fd_img = [letterbox(x, new_shape=self.fd_imgsz)[0] for x in original_imgs]
+            fd_img = np.stack(fd_img, 0)
+            fd_img = fd_img[:, :, :, ::-1].transpose(0, 3, 1, 2)
+            fd_img = np.ascontiguousarray(fd_img)
+        if self.vis:
+            vis_img = [letterbox(x, new_shape=self.vis_imgsz)[0] for x in original_imgs]
+            vis_img = np.stack(vis_img, 0)
+            vis_img = vis_img[:, :, :, ::-1].transpose(0, 3, 1, 2)
+            vis_img = np.ascontiguousarray(vis_img)
+        if self.sed:
+            sed_img = [letterbox(x, new_shape=self.sed_imgsz)[0] for x in original_imgs]
+            sed_img = np.stack(sed_img, 0)
+            sed_img = sed_img[:, :, :, ::-1].transpose(0, 3, 1, 2)
+            sed_img = np.ascontiguousarray(sed_img)
+        return fd_img, vis_img, sed_img, original_imgs[0]
 
     def __len__(self):
         return 0
 
 class LoadImages:
     # YOLOv5 image/video dataloader, i.e. `python detect.py --source image.jpg/vid.mp4`
-    def __init__(self, path, img_size=640, stride=32, auto=True, transforms=None):
+    def __init__(self, path, fd_imgsz=False, vis_imgsz=False, sed_imgsz=False):
         files = []
         for p in sorted(path) if isinstance(path, (list, tuple)) else [path]:
             p = str(Path(p).resolve())
             if '*' in p:
                 files.extend(sorted(glob.glob(p, recursive=True)))  # glob
             elif os.path.isdir(p):
-                files.extend(sorted(glob.glob(os.path.join(p, '*.*'))))  # dir
+                files.extend(sorted(glob.glob(os.path.join(p, "*.*"))))  # dir
             elif os.path.isfile(p):
                 files.append(p)  # files
             else:
-                raise FileNotFoundError(f'{p} does not exist')
-
-        IMG_FORMATS = 'bmp', 'dng', 'jpeg', 'jpg', 'mpo', 'png', 'tif', 'tiff', 'webp'  # include image suffixes
+                raise FileNotFoundError(f"{p} does not exist")
+        IMG_FORMATS = "bmp", "dng", "jpeg", "jpg", "mpo", "png", "tif", "tiff", "webp"  # include image suffixes
         images = [x for x in files if x.split('.')[-1].lower() in IMG_FORMATS]
-        VID_FORMATS = 'asf', 'avi', 'gif', 'm4v', 'mkv', 'mov', 'mp4', 'mpeg', 'mpg', 'ts', 'wmv'  # include video suffixes
-        videos = [x for x in files if x.split('.')[-1].lower() in VID_FORMATS]
-        ni, nv = len(images), len(videos)
-
-        self.img_size = img_size
-        self.stride = stride
-        self.files = images + videos
-        self.nf = ni + nv  # number of files
-        self.video_flag = [False] * ni + [True] * nv
-        self.mode = 'image'
-        self.auto = auto
-        self.transforms = transforms  # optional
-        if any(videos):
-            self.new_video(videos[0])  # new video
-        else:
-            self.cap = None
-        assert self.nf > 0, f'No images or videos found in {p}. ' \
-                            f'Supported formats are:\nimages: {IMG_FORMATS}\nvideos: {VID_FORMATS}'
+        self.files = images
+        self.nf = len(images)  # number of files
+        self.mode = "image"
+        self.cap = None
+        assert self.nf > 0, f"No images found in {p}. Supported formats are:\nimages: {IMG_FORMATS}"
+        self.fd        = bool(fd_imgsz)
+        self.vis       = bool(vis_imgsz)
+        self.sed       = bool(sed_imgsz)
+        self.fd_imgsz  = fd_imgsz
+        self.vis_imgsz = vis_imgsz
+        self.sed_imgsz = sed_imgsz
 
     def __iter__(self):
         self.count = 0
         return self
 
     def __next__(self):
-        if self.count == self.nf:
-            raise StopIteration
+        if self.count == self.nf: raise StopIteration
         path = self.files[self.count]
-
-        if self.video_flag[self.count]:
-            # Read video
-            self.mode = 'video'
-            ret_val, im0 = self.cap.read()
-            while not ret_val:
-                self.count += 1
-                self.cap.release()
-                if self.count == self.nf:  # last video
-                    raise StopIteration
-                path = self.files[self.count]
-                self.new_video(path)
-                ret_val, im0 = self.cap.read()
-
-            self.frame += 1
-            s = f'video {self.count + 1}/{self.nf} ({self.frame}/{self.frames}) {path}: '
-
-        else:
-            # Read image
-            self.count += 1
-            im0 = cv2.imread(path)  # BGR
-            assert im0 is not None, f'Image Not Found {path}'
-            s = f'image {self.count}/{self.nf} {path}: '
-
-        if self.transforms:
-            im = self.transforms(cv2.cvtColor(im0, cv2.COLOR_BGR2RGB))  # transforms
-        else:
-            im = letterbox(im0, self.img_size, auto=self.auto)[0]  # padded resize
-            im = im.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
-            im = np.ascontiguousarray(im)  # contiguous
-
-        return im, im, im0
-        return fd_img, sed_img, original_img
-
-    def new_video(self, path):
-        self.frame = 0
-        self.cap = cv2.VideoCapture(path)
-        self.frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        # Read image
+        self.count += 1
+        fd_img, vis_img, sed_img = None, None, None
+        original_img = cv2.imread(path)  # BGR
+        assert original_img is not None, f'Image Not Found {path}'
+        if self.fd:
+            fd_img = letterbox(original_img, self.fd_imgsz)[0]  # padded resize
+            fd_img = fd_img.transpose((2, 0, 1))[::-1]          # HWC to CHW, BGR to RGB
+            fd_img = np.ascontiguousarray(fd_img)               # contiguous
+        if self.vis:
+            vis_img = letterbox(original_img, self.vis_imgsz)[0]  # padded resize
+            vis_img = vis_img.transpose((2, 0, 1))[::-1]          # HWC to CHW, BGR to RGB
+            vis_img = np.ascontiguousarray(vis_img)               # contiguous
+        if self.sed:
+            sed_img = letterbox(original_img, self.sed_imgsz)[0]  # padded resize
+            sed_img = sed_img.transpose((2, 0, 1))[::-1]          # HWC to CHW, BGR to RGB
+            sed_img = np.ascontiguousarray(sed_img)               # contiguous
+        return fd_img, vis_img, sed_img, original_img
 
     def __len__(self):
         return self.nf  # number of files

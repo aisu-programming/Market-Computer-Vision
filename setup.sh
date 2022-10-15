@@ -26,7 +26,7 @@ pip3 install torchvision-0.10.0a0-cp37-cp37m-linux_armv7l.whl
 pip3 install -r requirements.txt
 
 sudo apt-get update
-sudo apt-get upgrade
+sudo apt-get upgrade -y
 sudo apt-get install -y libatlas-base-dev
 sudo apt-get install -y libhdf5-dev
 sudo apt-get install -y libhdf5-serial-dev
