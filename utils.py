@@ -201,16 +201,16 @@ def write_google_sheet(
     spreadsheet_id,
     range_name,
     time,
-    current_people_amount,
+    people_amount_in_period,
     total_people_amount,
     alert_stock_amount,
     alert_stock_amount_smoothed
 ):
-    cpa  = current_people_amount
+    paid = people_amount_in_period
     tpa  = total_people_amount
     asa  = alert_stock_amount
     asas = alert_stock_amount_smoothed
     return append_values(
         spreadsheet_id, range_name,
-        [[ time, cpa, tpa, asa, asas ]]
+        [[ time, paid, tpa, asa, asas ]]
     )

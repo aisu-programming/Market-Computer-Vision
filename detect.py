@@ -55,21 +55,30 @@ def detect(opt):
 
     """ Footfall-Detection model """
     if opt.fd:
-        total_customer_amount = 0
         last_customer_amount = 0
+        total_people_amount = 0
+        last_total_people_amount = 0
         from Footfall_Detection.utils.general import non_max_suppression as fd_non_max_suppression
         fd_model = fd_attempt_load(opt.fd_weights, map_location=device)  # load FP32 fd_model
         fd_imgsz = check_img_size(fd_imgsz, s=fd_model.stride.max())  # check img_size
         img = torch.zeros((1, 3, fd_imgsz, fd_imgsz), device=device)  # init img
         _ = fd_model(img)
     else:
-        total_customer_amount = "N/A"
-        now_customer_amount   = "N/A"
+        total_people_amount = "N/A"
+        now_people_amount   = "N/A"
 
     """ Inference """
     date = ''
     vis_smoothing, sed_smoothing = [], []
     for fd_img, vis_img, sed_img, original_img in dataset:
+
+        now_hour = int(time.strftime('%H', time.localtime()))
+        while now_hour < 8 or now_hour >= 21:
+            now_hour = int(time.strftime('%H', time.localtime()))
+            time.sleep(60*60)  # 1 hour
+        while now_hour < 9:
+            now_hour = int(time.strftime('%H', time.localtime()))
+            time.sleep(60)     # 1 minute
 
         # Update output directory if it is a new day
         if date != time.strftime("%Y/%m/%d", time.localtime()):
@@ -81,12 +90,12 @@ def detect(opt):
             if save_csv:
                 if not os.path.exists(csv_path):
                     with open(csv_path, "w") as f:
-                        f.write("time,current people amount,total people amount,alert stock amount,alert stock amount (smoothed)\n")
+                        f.write("time,people amount in period,total people amount,alert stock amount,alert stock amount (smoothed)\n")
             if save_google_sheet:
                 try:
                     create_sheet(google_sid, date)
                     write_google_sheet(google_sid, date,
-                                       "time", "current people amount", "total people amount",
+                                       "time", "people amount in period", "total people amount",
                                        "alert stock amount", "alert stock amount (smoothed)")
                 except:
                     pass
@@ -108,7 +117,7 @@ def detect(opt):
             fd_pred = fd_model(fd_img, augment=False)[0]
             fd_inf_end_time = time.time()
             
-            now_customer_amount = 0
+            now_people_amount = 0
             fd_pred = fd_non_max_suppression(fd_pred, opt.fd_conf_thres, opt.fd_iou_thres, classes=[0])[0]  # Apply NMS
             if fd_pred is not None and len(fd_pred):
                 # Rescale boxes from img_size to oi size
@@ -116,7 +125,7 @@ def detect(opt):
 
                 # Get customer amount
                 for c in fd_pred[:, -1].unique():
-                    now_customer_amount = (fd_pred[:, -1] == c).sum().item()
+                    now_people_amount = (fd_pred[:, -1] == c).sum().item()
 
                 # Add bbox to image
                 if save_img or view_img:
@@ -124,17 +133,17 @@ def detect(opt):
                         label = f"Person no.{i+1}: conf {int(conf*100)}%"
                         plot_one_box(xyxy, oi, label=label, color=hex2rgb("#DD0000"), line_thickness=5)
 
-            s += f"detected {now_customer_amount} people"
-            if now_customer_amount != last_customer_amount:
-                if now_customer_amount > last_customer_amount:
-                    s += f"... {(now_customer_amount-last_customer_amount)} new customer(s) in!\n\t"
-                    total_customer_amount += (now_customer_amount-last_customer_amount)
+            s += f"detected {now_people_amount} people"
+            if now_people_amount != last_customer_amount:
+                if now_people_amount > last_customer_amount:
+                    s += f"... {(now_people_amount-last_customer_amount)} new customer(s) in!\n\t"
+                    total_people_amount += (now_people_amount-last_customer_amount)
                 else:
-                    s += f"... {(last_customer_amount-now_customer_amount)} customer(s) left!\n\t"
-                last_customer_amount = now_customer_amount
+                    s += f"... {(last_customer_amount-now_people_amount)} customer(s) left!\n\t"
+                last_customer_amount = now_people_amount
             else:
                 s += "\n\t"
-            s += f"total customer amount pass by this camera: {total_customer_amount}\n\t"
+            s += f"total customer amount pass by this camera: {total_people_amount}\n\t"
 
             fd_end_time = time.time()
             s += f"inference time: {fd_inf_end_time-fd_inf_start_time:.3f}s, "
@@ -220,15 +229,17 @@ def detect(opt):
 
         # Save results to csv file and Google sheet
         now_time = time.strftime("%H:%M:%S", time.localtime())
+        people_amount_in_period = total_people_amount - last_total_people_amount
         if save_csv and save_csv_interval <= 0:
             with open(csv_path, "a") as f:
-                f.write(f"{now_time},{now_customer_amount},{total_customer_amount},{sed_alert_stock_amount},{sed_alert_stock_amount_smoothed}\n")
+                f.write(f"{now_time},{people_amount_in_period},{total_people_amount},{sed_alert_stock_amount},{sed_alert_stock_amount_smoothed}\n")
             save_csv_interval = opt.save_csv_interval
         if save_google_sheet and save_google_sheet_interval <= 0:
             write_google_sheet(google_sid, date,
-                               now_time, now_customer_amount, total_customer_amount,
+                               now_time, people_amount_in_period, total_people_amount,
                                sed_alert_stock_amount, sed_alert_stock_amount_smoothed)
             save_google_sheet_interval = opt.save_google_sheet_interval
+        last_total_people_amount = total_people_amount
 
         # Print time
         print(f"{s}Finished in {time.time()-start_time:.3f}s, start to sleep {opt.sleep}s\n")
@@ -291,11 +302,11 @@ if __name__ == "__main__":
     # parser.add_argument("--output", type=str, help="output folder",
     #     default=f"inference/{time.strftime('%Y.%m.%d', time.localtime())}")  # output folder
     parser.add_argument("--save-img", action="store_true", help="save images")
-    parser.add_argument("--save-img-interval", type=int, default=0, help="interval time(seconds) between every images saving")
+    parser.add_argument("--save-img-interval", type=int, default=15*60, help="interval time(seconds) between every images saving")
     parser.add_argument("--save-csv", action="store_true", help="save results to csv")
-    parser.add_argument("--save-csv-interval", type=int, default=0, help="interval time(seconds) between every record lines in csv")
+    parser.add_argument("--save-csv-interval", type=int, default=15*60, help="interval time(seconds) between every record lines in csv")
     parser.add_argument("--save-google-sheet", action="store_true", help="save results to google sheet")
-    parser.add_argument("--save-google-sheet-interval", type=int, default=0, help="interval time(seconds) between every record lines in google sheet")
+    parser.add_argument("--save-google-sheet-interval", type=int, default=15*60, help="interval time(seconds) between every record lines in google sheet")
     parser.add_argument("--google-sid", type=str, default=DEFAULT_SPREADSHEET_ID, help="Spreadsheet ID of the target Google Sheet")
 
     opt = parser.parse_args()
