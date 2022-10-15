@@ -1,6 +1,7 @@
 ### Footfall-Detection
-torch==1.9
-torchvision==0.10
+# torch==1.9
+# torchvision==0.10
+numpy==1.21.4
 opencv-python==4.5.3.56
 matplotlib
 PyYAML
@@ -27,7 +28,3 @@ seaborn
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
-
-
-# Misc
-# numpy==1.21.4  # Manually update numpy is necessary
