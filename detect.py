@@ -73,13 +73,14 @@ def detect(opt):
     vis_smoothing, sed_smoothing = [], []
     for fd_img, vis_img, sed_img, original_img in dataset:
 
-        now_hour = int(time.strftime('%H', time.localtime()))
-        while now_hour < 8 or now_hour >= 21:
+        if not opt.test:
             now_hour = int(time.strftime('%H', time.localtime()))
-            time.sleep(60*60)  # 1 hour
-        while now_hour < 9:
-            now_hour = int(time.strftime('%H', time.localtime()))
-            time.sleep(60)     # 1 minute
+            while now_hour < 8 or now_hour >= 21:
+                now_hour = int(time.strftime('%H', time.localtime()))
+                time.sleep(60*60)  # 1 hour
+            while now_hour < 9:
+                now_hour = int(time.strftime('%H', time.localtime()))
+                time.sleep(60)     # 1 minute
 
         # Update output directory if it is a new day
         if date != time.strftime("%Y/%m/%d", time.localtime()):
