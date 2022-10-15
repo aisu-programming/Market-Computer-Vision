@@ -3,13 +3,14 @@ To clone this repository, type `git clone --recursive https://github.com/aisu-pr
 
 Notice that the option `--recursive` is necessary because of submodules.
 
+## Download models
+Type the command `sh download-weights.sh` to download all model's weights files.
+
 ## Environment setup
 1. Type the command `sh setup-torch.sh` to install PyTorch (version 1.9) for Raspberry Pi 32-bits OS with Python 3.7.
 2. Type the command `sh setup-torchvision.sh` to install torchvision (version 0.10) for Raspberry Pi 32-bits OS with Python 3.7.
 3. Type the command `sh setup-others.sh` to install all other requirements.
-
-## Download models
-Type the command `sh download-weights.sh` to download all model's weights files.
+4. Setup the Google Sheet API. See [tutorial](https://github.com/aisu-programming/Market-Computer-Vision/blob/main/GOOGLE_SHEET_API_TUTORIAL.md).
 
 ## Usage
 The main command is `python3 detect.py`.
