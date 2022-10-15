@@ -108,7 +108,7 @@ def detect(opt):
             fd_pred = fd_model(fd_img, augment=False)[0]
             fd_inf_end_time = time.time()
             
-            # now_customer_amount = 0
+            now_customer_amount = 0
             fd_pred = fd_non_max_suppression(fd_pred, opt.fd_conf_thres, opt.fd_iou_thres, classes=[0])[0]  # Apply NMS
             if fd_pred is not None and len(fd_pred):
                 # Rescale boxes from img_size to oi size
