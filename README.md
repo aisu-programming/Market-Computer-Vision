@@ -61,6 +61,13 @@ There are serveral options can be add:
 
 Combine above options or edit default value of each options in *detect.py*.
 
+## Some data
+|                                                      | Raspberry Pi 3B         | Raspberry Pi 4B         |
+| ---------------------------------------------------- | ----------------------- | ----------------------- |
+| Installation time (setup-*.sh + download-weights.sh) | 31 minutes              | 23 minutes              |
+| Footfall-Detection speed (input img size = 64)       | 2~4 sec / per inference | 1.4 sec / per inference |
+| Shelf-Empty-Detection speed (input img size = 256)   | 6~8 sec / per inference | 2~3 sec / per inference |
+
 ## About the OS
 I used the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
