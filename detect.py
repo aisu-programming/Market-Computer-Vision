@@ -290,7 +290,7 @@ if __name__ == "__main__":
     """ Shelf-Empty-Detection """
     parser.add_argument("--sed", action="store_true", help="turn on Shelf-Empty-Detection or not")
     parser.add_argument("--sed-weights", nargs="+", type=str,
-        default="Shelf_Empty_Detection/shelf-empty-detection-256-1.0.pt", help="model.pt path for 'Shelf-Empty-Detection'")
+        default="Shelf_Empty_Detection/shelf-empty-detection-256-0.75.pt", help="model.pt path for 'Shelf-Empty-Detection'")
     parser.add_argument("--sed-img-size", type=int, default=256,
         help="imput size(pixels) for 'Shelf-Empty-Detection', must be multiple of 32")
     parser.add_argument("--sed-alert-amount-thres", type=float, default=0.5, help="threshold for stock amount to be alert")

@@ -12,6 +12,9 @@ Type the command `sh download-weights.sh` to download all model's weights files.
 3. Type the command `sh setup-others.sh` to install all other requirements.
 4. Setup the Google Sheet API. See [tutorial](https://github.com/aisu-programming/Market-Computer-Vision/blob/main/GOOGLE_SHEET_API_TUTORIAL.md).
 
+## Update this project
+Type the command `git pull` then `sh download-weights.sh` to get the newest model weight file.
+
 ## Usage
 The main command is `python3 detect.py`.
 
