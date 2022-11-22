@@ -37,6 +37,7 @@ def detect(opt):
 
     """ Shelf-Empty-Detection model """
     if opt.sed:
+        sed_smoothing = []
         from Shelf_Empty_Detection.models.common import DetectMultiBackend
         from Shelf_Empty_Detection.utils.general import non_max_suppression as sed_non_max_suppression
         sed_model = DetectMultiBackend(opt.sed_weights, device=device)
@@ -46,8 +47,9 @@ def detect(opt):
         sed_alert_stock_amount          = "N/A"
         sed_alert_stock_amount_smoothed = "N/A"
 
-    # """ Vegetable-Instance-Segmentation model """
+    """ Vegetable-Instance-Segmentation model """
     # if opt.vis:
+    #     vis_smoothing = []
     #     from Vegetable_Instance_Segmentation.model.simple_CNN import SimpleCNN
     #     vis_model = SimpleCNN(dropout=0)
     #     vis_model.build(input_shape=(None, 640, 480, 3))
@@ -60,8 +62,8 @@ def detect(opt):
         last_total_people_amount = 0
         from Footfall_Detection.utils.general import non_max_suppression as fd_non_max_suppression
         fd_model = fd_attempt_load(opt.fd_weights, map_location=device)  # load FP32 fd_model
-        fd_imgsz = check_img_size(fd_imgsz, s=fd_model.stride.max())  # check img_size
-        img = torch.zeros((1, 3, fd_imgsz, fd_imgsz), device=device)  # init img
+        fd_imgsz = check_img_size(fd_imgsz, s=fd_model.stride.max())     # check img_size
+        img = torch.zeros((1, 3, fd_imgsz, fd_imgsz), device=device)     # init img
         _ = fd_model(img)
     else:
         # now_people_amount       = "N/A"
@@ -70,7 +72,6 @@ def detect(opt):
 
     """ Inference """
     date = ''
-    vis_smoothing, sed_smoothing = [], []
     for fd_img, vis_img, sed_img, original_img in dataset:
 
         if not opt.test:
@@ -78,9 +79,15 @@ def detect(opt):
             while now_hour < 8 or now_hour >= 21:
                 now_hour = int(time.strftime('%H', time.localtime()))
                 time.sleep(60*60)  # 1 hour
+                if opt.sed: sed_smoothing = []
+                # if opt.vis: vis_smoothing = []
+                if opt.fd:
+                    last_customer_amount     = 0
+                    total_people_amount      = 0
+                    last_total_people_amount = 0
             while now_hour < 9:
                 now_hour = int(time.strftime('%H', time.localtime()))
-                time.sleep(60)     # 1 minute
+                time.sleep(60)  # 1 minute
 
         # Update output directory if it is a new day
         if date != time.strftime("%Y/%m/%d", time.localtime()):
