@@ -245,12 +245,13 @@ def detect(opt):
             with open(csv_path, "a") as f:
                 f.write(f"{now_time},{people_amount_in_period},{total_people_amount},{sed_alert_stock_amount},{sed_alert_stock_amount_smoothed}\n")
             save_csv_interval = opt.save_csv_interval
+            last_total_people_amount = total_people_amount
         if save_google_sheet and save_google_sheet_interval <= 0:
             write_google_sheet(google_sid, date,
                                now_time, people_amount_in_period, total_people_amount,
                                sed_alert_stock_amount, sed_alert_stock_amount_smoothed)
             save_google_sheet_interval = opt.save_google_sheet_interval
-        last_total_people_amount = total_people_amount
+            last_total_people_amount = total_people_amount
 
         # Print time
         print(f"{s}Finished in {time.time()-start_time:.3f}s, start to sleep {opt.sleep}s\n")
