@@ -30,4 +30,12 @@ if ! [ -s shelf-empty-detection-256-0.75.pt ]
 then
     wget https://github.com/aisu-programming/Shelf-Empty-Detection/releases/download/v1.2/shelf-empty-detection-256-0.75.pt
 fi
+if ! [ -s machine01-shelf-empty-detection-256-0.75.pt ]
+then
+    wget https://github.com/aisu-programming/Shelf-Empty-Detection/releases/download/v1.3/machine01-shelf-empty-detection-256-0.75.pt
+fi
+if ! [ -s machine02-shelf-empty-detection-256-0.75.pt ]
+then
+    wget https://github.com/aisu-programming/Shelf-Empty-Detection/releases/download/v1.3/machine02-shelf-empty-detection-256-0.75.pt
+fi
 cd ..
